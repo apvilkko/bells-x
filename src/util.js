@@ -19,7 +19,7 @@ export const maybe = (prob, opt1, opt2) => {
   });
   sorted.forEach(key => {
     sum += (key === 'rest' ? (100 - sum) : Number(key));
-    if (!chosen && rand(sum)) {
+    if (chosen === null && rand(sum)) {
       chosen = prob[key];
     }
   });

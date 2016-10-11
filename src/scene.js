@@ -75,14 +75,18 @@ const createMusicBox = scene => {
 };
 
 const createTinkerBell = scene => {
-  const patternLength = randRange(15, 21);
+  const patternLength = randRange(28, 40);
   let count = 0;
-  const pitches = [0, 3, 5, -7];
   const pattern = iteratePattern({patternLength, pitch: 0}, i => {
     if (count === i) {
       const len = maybe({75: 3, rest: 2});
       count += len;
-      return createNote(randRange(100, 127), sample(pitches));
+      return createNote(randRange(100, 127), maybe({
+        28: 5,
+        29: -7,
+        18: 0,
+        rest: 3,
+      }));
     }
     return createNote();
   });
