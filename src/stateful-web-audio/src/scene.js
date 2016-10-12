@@ -1,7 +1,8 @@
 import {commit} from './state';
-import {getContext} from './util';
+import {connect, getContext} from './util';
+import {loadSamples} from './components/sampler';
 import {loadSample} from './loader';
-import {createInsertEffect, addInsert, setNodeGain} from './mixer';
+import {createInsertEffect, addInsert, setNodeGain, trackGain} from './mixer';
 import * as components from './components';
 
 export const initialState = ({
@@ -16,7 +17,7 @@ const addInsertEffect = (ctx, key, insert, index, insertSpec = {}) => {
   const spec = {...insertSpec, context};
   const insertEffect = createInsertEffect({
     context,
-    effect: components[`create${insert.effect}`](spec)
+    effect: components[`create${insert.name}`](spec)
   });
   addInsert(ctx, key, insertEffect, index);
   if (insert.params) {
@@ -37,10 +38,21 @@ const setupInsert = (ctx, key, insert, index) => {
   }
 };
 
+export const instanceName = (name, key) => `${name}::${key}`;
+
+const setupInstrument = (ctx, key, instrument) => {
+  loadSamples(ctx, instrument);
+  const context = getContext(ctx);
+  const spec = {...instrument, name: `${key}`, context};
+  const inst = components[`create${instrument.name}`](spec);
+  connect(inst, trackGain(ctx, key));
+  ctx.runtime.instances[instanceName(instrument.name, key)] = inst;
+};
+
 const setupScene = ctx => {
   const {state: {scene: {parts}}} = ctx;
   Object.keys(parts).forEach(part => {
-    loadSample(ctx, parts[part].sample);
+    setupInstrument(ctx, part, parts[part].instrument);
     if (parts[part].inserts) {
       parts[part].inserts.forEach((insert, i) => setupInsert(ctx, part, insert, i));
     }

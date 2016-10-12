@@ -14,11 +14,10 @@ const newScene = ctx => {
 
 const ctx = init();
 createMixer(ctx, {
-  [tracks.LOW1]: {gain: 0.7},
-  [tracks.LOW2]: {gain: 0.7},
-  [tracks.BELLS]: {gain: 0.5},
-  [tracks.BOX]: {gain: 0.5},
-  [tracks.TIN]: {gain: 0.1},
+  [tracks.LOW]: {gain: 0.7},
+  [tracks.BELLS]: {gain: 0.2},
+  [tracks.BOX]: {gain: 0.4},
+  [tracks.TIN]: {gain: 0.2},
 });
 newScene(ctx);
 start(ctx);

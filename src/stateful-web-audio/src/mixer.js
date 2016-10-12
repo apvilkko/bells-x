@@ -1,5 +1,5 @@
 import {commit} from './state';
-import {getContext, connect, disconnect} from './util';
+import {getContext, connect, disconnect, nameFn} from './util';
 import {
   createCompressor,
   createVCA,
@@ -10,16 +10,23 @@ export const initialState = ({
 });
 
 export const createInsertEffect = ({context, effect}) => {
-  const dry = createVCA({context, gain: 1});
-  const wet = createVCA({context, gain: 0.5});
-  const input = createVCA({context, gain: 1});
-  const output = createVCA({context, gain: 1});
+  const dry = createVCA({context, gain: 1, name: `insertDry ${effect}`});
+  const wet = createVCA({context, gain: 0.5, name: `insertWet ${effect}`});
+  const input = createVCA({context, gain: 1, name: `insertIn ${effect}`});
+  const output = createVCA({context, gain: 1, name: `insertOut ${effect}`});
   connect(input, dry);
   connect(input, effect);
   connect(effect, wet);
   connect(wet, output);
   connect(dry, output);
-  return {dry, wet, effect, input, output};
+  return {
+    dry,
+    wet,
+    effect,
+    input,
+    output,
+    toString: nameFn('InsertEffect', `${effect}`)
+  };
 };
 
 const createTrack = spec => ({...spec, inserts: []});
@@ -33,14 +40,15 @@ export const setTrackGain = (mixer, track, value) => {
 };
 
 export const getInsert = (ctx, key, index) =>
-  ctx.state.mixer.tracks[key].inserts[index].effect;
+  ctx.state.mixer.tracks[key].inserts[index].name;
 
-const mixBus = tracks => tracks.master.mixBus;
+export const mixBus = ctx => ctx.state.mixer.tracks.master.mixBus;
+export const trackGain = (ctx, key) => ctx.state.mixer.tracks[key].gain;
 
 export const addInsert = (ctx, key, insertEffect, index = -1) => {
   const {state: {mixer: {tracks}}} = ctx;
   const inserts = tracks[key].inserts;
-  const dest = mixBus(tracks);
+  const dest = mixBus(ctx);
   const pos = index < 0 ? inserts.length : index;
   const addingToEnd = pos === inserts.length;
   if (pos > 0) {
@@ -65,13 +73,13 @@ export const addInsert = (ctx, key, insertEffect, index = -1) => {
 export const createMixer = (ctx, trackSpec) => {
   const context = getContext(ctx);
   const masterGain = createVCA({
-    context, gain: 1, destination: context.destination
+    context, gain: 1, destination: context.destination, name: 'masterGain'
   });
   const masterLimiter = createCompressor({
-    context, destination: masterGain
+    context, destination: masterGain, name: 'masterLimiter'
   });
   const mixBus = createVCA({
-    context, gain: 0.4, destination: masterLimiter
+    context, gain: 0.4, destination: masterLimiter, name: 'masterMixBus'
   });
   const tracks = {
     master: createTrack({
@@ -87,7 +95,7 @@ export const createMixer = (ctx, trackSpec) => {
       gain: createVCA({
         context,
         gain: gainValue,
-        destination: mixBus
+        name: `trackGain:${track}`
       })
     });
   });

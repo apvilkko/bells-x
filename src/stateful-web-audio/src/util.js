@@ -4,12 +4,8 @@ export const getContext = ctx => ctx.runtime.instances.context;
 
 const log = (from, to, disconnect) => {
   if (!DEBUG) return;
-  console.log( // eslint-disable-line
-    disconnect ? 'disconnect' : 'connect',
-    Object.prototype.toString.call(from),
-    '=>',
-    Object.prototype.toString.call(to)
-  );
+  const str = `${disconnect ? 'disconnect' : 'connect'} ${from} => ${to}`;
+  console.log(str); // eslint-disable-line
 };
 
 const output = from => (from.output ? from.output : from);
@@ -31,3 +27,5 @@ export const disconnect = (node, from) => {
   log(node, null, true);
   src.disconnect();
 };
+
+export const nameFn = (name1, name2) => () => `[${name1} ${name2}]`;

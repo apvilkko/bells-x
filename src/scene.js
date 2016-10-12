@@ -13,7 +13,7 @@ const iteratePattern = ({patternLength, pitch}, iterator) =>
 const empty = () => createNote();
 
 const reverbSpec = {
-  effect: 'Reverb',
+  name: 'Reverb',
   params: {dry: 0.9, wet: 0.3},
   sample: urlify('impulse1')
 };
@@ -24,19 +24,24 @@ const createLow = scene => {
   const shifted = sample(notes);
   const portion = Math.floor(patternLength / notes.length);
   const indexes = notes.map(i => (i * portion + randRange(0, portion - 4)));
-  const pattern1 = iteratePattern({patternLength, pitch: 0}, empty);
-  const pattern2 = iteratePattern({patternLength, pitch: 0}, empty);
+  const pattern = iteratePattern({patternLength, pitch: 0}, empty);
   indexes.forEach((pos, i) => {
-    (shifted === i ? pattern2 : pattern1)[pos] = createNote(127, 0);
+    pattern[pos] = createNote(127, shifted === i ? 12 : 0);
   });
-  scene.parts[tracks.LOW1] = {
-    sample: urlify('low1'),
-    pattern: pattern1,
-    inserts: [reverbSpec],
-  };
-  scene.parts[tracks.LOW2] = {
-    sample: urlify('low2'),
-    pattern: pattern2,
+  scene.parts[tracks.LOW] = {
+    instrument: {
+      name: 'Sampler',
+      sampleMap: {
+        12: {
+          sample: urlify('low2'),
+          root: -12,
+        },
+        rest: {
+          sample: urlify('low1'),
+        }
+      }
+    },
+    pattern,
     inserts: [reverbSpec],
   };
 };
@@ -46,10 +51,13 @@ const createBells = scene => {
   const pattern = iteratePattern({patternLength, pitch: 0}, empty);
   pattern[0] = createNote(127, 0);
   scene.parts[tracks.BELLS] = {
-    sample: urlify('bells'),
+    instrument: {
+      name: 'Sampler',
+      sampleMap: urlify('bells')
+    },
     pattern,
     inserts: [{
-      effect: 'Reverb',
+      name: 'Reverb',
       params: {dry: 0.9, wet: 0.8},
       sample: urlify('impulse2')
     }],
@@ -64,10 +72,13 @@ const createMusicBox = scene => {
   pattern[pos2] = createNote(100, 0);
   pattern[pos2 + randRange(2, 4)] = createNote(105, -4);
   scene.parts[tracks.BOX] = {
-    sample: urlify('musicbox'),
+    instrument: {
+      name: 'Sampler',
+      sampleMap: urlify('musicbox')
+    },
     pattern,
     inserts: [{
-      effect: 'Reverb',
+      name: 'Reverb',
       params: {dry: 0.9, wet: 0.8},
       sample: urlify('impulse3')
     }],
@@ -91,14 +102,17 @@ const createTinkerBell = scene => {
     return createNote();
   });
   scene.parts[tracks.TIN] = {
-    sample: urlify('tinker'),
+    instrument: {
+      name: 'Sampler',
+      sampleMap: urlify('tinker'),
+    },
     pattern,
     inserts: [{
-      effect: 'Delay',
+      name: 'Delay',
       params: {dry: 1, wet: 0.2},
       delayTime: 0.66 * 60.0 / TEMPO,
     }, {
-      effect: 'Reverb',
+      name: 'Reverb',
       params: {dry: 0.9, wet: 0.7},
       sample: urlify('plate')
     }],
